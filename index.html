@@ -59,6 +59,8 @@ html,body{height:100%;margin:0;overflow:hidden;background:var(--pagebg);transiti
 #gbar a,#gbar button{height:84px;padding:0 40px;border-radius:42px;font:900 34px/84px 'Noto Serif TC';letter-spacing:.1em;text-decoration:none;border:0;cursor:pointer;white-space:nowrap}
 #gbar .p{background:var(--sbtn,#C8283A);color:#fff}
 #gbar .s{background:rgba(255,255,255,.85);color:var(--ink)}
+#gsnd{position:absolute;right:40px;top:100px;z-index:45;height:64px;padding:0 26px;border-radius:32px;border:3px solid var(--red);background:var(--cream);color:var(--red);font:900 28px/58px 'Noto Serif TC';letter-spacing:.1em;cursor:pointer}
+#gsnd.off{opacity:.6}
 #gtoast{position:absolute;left:50%;top:40px;transform:translateX(-50%);z-index:40;background:rgba(58,32,48,.92);color:#fff;font:900 34px/1.4 'Noto Serif TC';padding:18px 40px;border-radius:40px;letter-spacing:.06em;opacity:0;transition:opacity .4s;white-space:nowrap}
 #gtoast.on{opacity:1}
 @media (prefers-reduced-motion:reduce){#grays,#gstick.out.idle{animation:none}}
@@ -189,6 +191,7 @@ html,body{height:100%;margin:0;overflow:hidden;background:var(--pagebg);transiti
 </div></div>
 <div id="gbar"></div>
 <div id="gtoast"></div>
+<button id="gsnd" type="button" aria-pressed="true">音效 開</button>
 <svg class="g-noise" width="1080" height="1920" aria-hidden="true"><filter id="gnz"><feTurbulence type="fractalNoise" baseFrequency=".85" numOctaves="2" seed="5"/><feColorMatrix values="0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 -2 1.15"/></filter><rect width="1080" height="1920" filter="url(#gnz)"/></svg>
 </div></div>
 <script>// 花籤插畫：圓弧花瓣＋中心亮邊緣深的漸層＋噴砂顆粒（feDisplacementMap），不描邊
@@ -641,15 +644,41 @@ function bar(k){
 }
 let tt;function toast(m){const t=$('gtoast');t.textContent=m;t.classList.add('on');clearTimeout(tt);tt=setTimeout(()=>t.classList.remove('on'),2600)}
 // ---------- 聲音＋震動 ----------
-let ac;function clack(){
-  try{ac=ac||new (window.AudioContext||window.webkitAudioContext)();
-    for(let n=0;n<3;n++){const len=.045,buf=ac.createBuffer(1,ac.sampleRate*len,ac.sampleRate),ch=buf.getChannelData(0);
-      for(let i=0;i<ch.length;i++)ch[i]=(Math.random()*2-1)*Math.pow(1-i/ch.length,3);
-      const s=ac.createBufferSource(),f=ac.createBiquadFilter(),v=ac.createGain();s.buffer=buf;f.type='bandpass';f.frequency.value=1400+Math.random()*1400;f.Q.value=4;v.gain.value=.9;
-      s.connect(f);f.connect(v);v.connect(ac.destination);s.start(ac.currentTime+n*.05+Math.random()*.02)}
-  }catch(e){}
-  try{if(navigator.vibrate)navigator.vibrate([30,40,30]);else haptic()}catch(e){}
+// ---------- 音效（全部用 WebAudio 即時合成，不用音檔） ----------
+let ac=null,muted=false;
+function ctx(){
+  if(muted)return null;
+  try{
+    // iPhone 靜音鍵開著時，網頁音效預設會被靜音；設成 playback 讓音效照常播
+    if(navigator.audioSession&&navigator.audioSession.type!=='playback')navigator.audioSession.type='playback';
+    ac=ac||new (window.AudioContext||window.webkitAudioContext)();if(ac.state==='suspended')ac.resume();return ac;
+  }catch(e){return null}
 }
+function noise(c,len){const b=c.createBuffer(1,Math.max(1,c.sampleRate*len),c.sampleRate),d=b.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=Math.random()*2-1;return b}
+function wood(c,t,f,vol){ // 木頭「喀」：短噪音＋快速下滑的音高
+  const s=c.createBufferSource(),bp=c.createBiquadFilter(),g=c.createGain();s.buffer=noise(c,.06);bp.type='bandpass';bp.frequency.value=f;bp.Q.value=6;
+  g.gain.setValueAtTime(vol,t);g.gain.exponentialRampToValueAtTime(.001,t+.06);s.connect(bp);bp.connect(g);g.connect(c.destination);s.start(t);s.stop(t+.07);
+  const o=c.createOscillator(),og=c.createGain();o.type='triangle';o.frequency.setValueAtTime(f*.55,t);o.frequency.exponentialRampToValueAtTime(f*.3,t+.05);
+  og.gain.setValueAtTime(vol*.5,t);og.gain.exponentialRampToValueAtTime(.001,t+.07);o.connect(og);og.connect(c.destination);o.start(t);o.stop(t+.08);
+}
+function bell(c,t,f,vol,dur){ // 鈴聲：基音＋泛音，慢慢消失
+  for(const [m,v] of [[1,1],[2.76,.35],[5.4,.12]]){const o=c.createOscillator(),g=c.createGain();o.type='sine';o.frequency.value=f*m;
+    g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(vol*v,t+.008);g.gain.exponentialRampToValueAtTime(.0005,t+dur);o.connect(g);g.connect(c.destination);o.start(t);o.stop(t+dur+.05)}
+}
+function swoosh(c,t,dur,f0,f1,vol){ // 紙張／籤滑動的「唰」
+  const s=c.createBufferSource(),bp=c.createBiquadFilter(),g=c.createGain();s.buffer=noise(c,dur);bp.type='bandpass';bp.Q.value=1.2;
+  bp.frequency.setValueAtTime(f0,t);bp.frequency.exponentialRampToValueAtTime(f1,t+dur);g.gain.setValueAtTime(.001,t);g.gain.linearRampToValueAtTime(vol,t+dur*.3);g.gain.exponentialRampToValueAtTime(.001,t+dur);
+  s.connect(bp);bp.connect(g);g.connect(c.destination);s.start(t);s.stop(t+dur);
+}
+const SFX={
+  tap(){const c=ctx();if(!c)return;const t=c.currentTime;wood(c,t,1800,.6);bell(c,t+.02,1318,.12,.5)},
+  rattle(){const c=ctx();if(!c)return;const t=c.currentTime;for(let n=0;n<5;n++)wood(c,t+n*.035+Math.random()*.015,1200+Math.random()*1600,.55)},
+  drop(){const c=ctx();if(!c)return;const t=c.currentTime;swoosh(c,t,.35,2500,700,.35);wood(c,t+.38,900,.9);wood(c,t+.52,1100,.5);wood(c,t+.6,1300,.25)},
+  open(grand){const c=ctx();if(!c)return;const t=c.currentTime;swoosh(c,t,.6,400,3200,.3);
+    const notes=grand?[784,988,1175,1568,1976]:[880,1175,1318];notes.forEach((f,i)=>bell(c,t+.35+i*(grand?.11:.14),f,grand?.22:.18,grand?1.6:1.2))}
+};
+function buzz(){try{if(navigator.vibrate)navigator.vibrate([30,40,30]);else haptic()}catch(e){}}
+function clack(){SFX.rattle();buzz()}
 // iPhone（iOS 18+）不支援 vibrate：切換隱藏的 switch 開關會觸發系統觸感回饋
 function haptic(){
   try{const l=document.createElement('label');l.setAttribute('aria-hidden','true');l.style.display='none';
@@ -686,7 +715,7 @@ function enterShake(){
 }
 async function start(){
   if(state!=='idle')return;
-  clack();
+  SFX.tap();buzz();
   try{
     if(window.DeviceMotionEvent&&typeof DeviceMotionEvent.requestPermission==='function'){
       const r=await DeviceMotionEvent.requestPermission();if(r!=='granted')throw 0;
@@ -706,6 +735,7 @@ function drop(){
   result=pick();if(!TEST)save(result);
   const d=FORTUNES[result];
   box.classList.remove('jig');box.innerHTML=boxSVG(0);box.classList.add('away');
+  SFX.drop();
   const st=$('gstick');st.innerHTML=stickSVG(result);st.classList.add('out');setTimeout(()=>st.classList.add('idle'),950);
   $('grays').style.opacity=1;
   setHead(d.grand?'隱藏籤':'第'+CN[+d.no]+'籤',d.grand?'好像有什麼不得了的東西掉出來了！':'籤掉出來了！');
@@ -714,10 +744,11 @@ function drop(){
 }
 let filled=false;function ensureSlip(){if(!filled){filled=true;fillSlip(result)}}
 function openSlip(){
-  if(state!=='dropped')return;state='open';clack();ensureSlip();
+  if(state!=='dropped')return;state='open';SFX.open(result==='grand');buzz();ensureSlip();$('gsnd').hidden=true;
   $('gtap').style.opacity=0;requestAnimationFrame(()=>slip.classList.add('open'));setTimeout(()=>bar(result),900);
 }
 $('gbtn').addEventListener('click',start);
+$('gsnd').addEventListener('click',()=>{muted=!muted;const b=$('gsnd');b.textContent=muted?'音效 關':'音效 開';b.classList.toggle('off',muted);b.setAttribute('aria-pressed',String(!muted));if(!muted)SFX.tap()});
 box.addEventListener('click',()=>{if(state==='idle')start();else shakeHit()});
 box.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();box.click()}});
 $('gstick').addEventListener('click',openSlip);
@@ -725,7 +756,7 @@ $('gstick').addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.pr
 // 今天抽過了 → 直接顯示今天的籤
 const prev=load();
 if(!TEST&&prev&&prev.d===today&&FORTUNES[prev.k]){
-  result=prev.k;state='open';fillSlip(result);slip.classList.add('shown');bar(result);
+  result=prev.k;state='open';$('gsnd').hidden=true;fillSlip(result);slip.classList.add('shown');bar(result);
   setTimeout(()=>toast('今天的籤抽過囉，明天再來抽新的一支'),300);
 }
 })();
