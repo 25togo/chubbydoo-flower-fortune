@@ -31,6 +31,10 @@ html,body{height:100%;margin:0;overflow:hidden;background:var(--pagebg);transiti
 @keyframes jig{0%{transform:rotate(160deg) translate(0,0)}25%{transform:rotate(148deg) translate(-26px,12px)}60%{transform:rotate(172deg) translate(24px,-10px)}100%{transform:rotate(160deg)}}
 #gbox.away{left:40px;top:1180px;width:300px;height:450px;opacity:.55}
 .g-btn{position:absolute;left:50%;top:1640px;transform:translateX(-50%);white-space:nowrap;height:120px;padding:0 70px 0 calc(70px + .2em);border-radius:60px;background:var(--red);color:var(--cream);font:900 52px/120px 'Noto Serif TC';letter-spacing:.2em;box-shadow:0 0 0 8px var(--yellow),0 0 0 12px var(--red),0 14px 0 12px rgba(120,20,20,.25);border:0;cursor:pointer;font-family:'Noto Serif TC'}
+/* 藏在可點區域上的真開關：iPhone 只有手指真的點到開關才會有觸感（iOS 26.5 起程式觸發被擋） */
+.hap{position:absolute;inset:0;z-index:5;opacity:.011;overflow:hidden;cursor:pointer;margin:0;border-radius:inherit}
+.hap input{position:absolute;left:0;top:0;width:100%;height:100%;margin:0;cursor:pointer}
+#gbox .hap,#gstick .hap{border-radius:0}
 .g-btn:active{transform:translateX(-50%) translateY(6px)}
 .g-btn:focus-visible{outline:6px solid var(--purple);outline-offset:18px}
 .g-note{position:absolute;left:60px;right:60px;top:1800px;text-align:center;font:600 30px/1.6 'Noto Serif TC';color:var(--ink);letter-spacing:.08em}
@@ -165,7 +169,7 @@ html,body{height:100%;margin:0;overflow:hidden;background:var(--pagebg);transiti
 <div id="gbox" role="button" aria-label="籤筒，點一下也能抽籤" tabindex="0"></div>
 <div id="gstick" role="button" aria-label="打開籤紙" tabindex="0"></div>
 <div id="gfx"></div>
-<button class="g-btn" id="gbtn" type="button">點我開始求籤</button>
+<div class="g-btn" id="gbtn" role="button" tabindex="0">點我開始求籤<label class="hap"><input type="checkbox" switch tabindex="-1" aria-hidden="true"></label></div>
 <div class="g-note" id="gnote">今天還有 <b>1</b> 次機會 · 搖不動？點籤筒也能抽</div>
 <div class="g-tap" id="gtap"><i></i>點一下籤，打開你的運勢</div>
 <div id="slip"><div id="stage2">
@@ -687,17 +691,13 @@ const SFX={
   open(grand){const c=ctx();if(!c)return;const t=c.currentTime;swoosh(c,t,.6,400,3200,.3);
     const notes=grand?[784,988,1175,1568,1976]:[880,1175,1318];notes.forEach((f,i)=>bell(c,t+.35+i*(grand?.11:.14),f,grand?.22:.18,grand?1.6:1.2))}
 };
-function buzz(){try{if(navigator.vibrate)navigator.vibrate([30,40,30]);else haptic()}catch(e){}}
+function buzz(){try{if(navigator.vibrate)navigator.vibrate([30,40,30])}catch(e){}}
 function clack(){SFX.rattle();buzz()}
 // iPhone（iOS 18+）不支援 vibrate：切換隱藏的 switch 開關會觸發系統觸感回饋
-function haptic(){
-  try{const l=document.createElement('label');l.setAttribute('aria-hidden','true');l.style.display='none';
-    const i=document.createElement('input');i.type='checkbox';i.setAttribute('switch','');l.appendChild(i);
-    document.head.appendChild(l);l.click();document.head.removeChild(l)}catch(e){}
-}
 // ---------- 流程 ----------
 let state='idle',hits=0,result=null,gotMotion=false;
-const box=$('gbox');box.innerHTML=boxSVG(0);
+const HAP='<label class="hap"><input type="checkbox" switch tabindex="-1" aria-hidden="true"></label>';
+const box=$('gbox');box.innerHTML=boxSVG(0)+HAP;
 function setHead(t,sub){$('gt1').textContent=t;$('gt2').textContent=t;$('gsub').textContent=sub}
 function burst(){
   ART.reset();const fx=$('gfx');
@@ -712,7 +712,7 @@ function burst(){
 function shakeHit(){
   if(state!=='shaking')return;
   hits++;box.classList.remove('jig');void box.offsetWidth;box.classList.add('jig');clack();burst();
-  if(hits===NEED-1)box.innerHTML=boxSVG(140);
+  if(hits===NEED-1)box.innerHTML=boxSVG(140)+HAP;
   if(hits>=NEED){drop();return}
   const left=NEED-hits;$('gnote').innerHTML=(gotMotion?'再搖 ':'再搖或點 ')+'<b>'+left+'</b> 下，籤就要掉出來了';
 }
@@ -746,7 +746,7 @@ function drop(){
   const d=FORTUNES[result];
   box.classList.remove('jig');box.innerHTML=boxSVG(0);box.classList.add('away');
   SFX.drop();
-  const st=$('gstick');st.innerHTML=stickSVG(result);st.classList.add('out');setTimeout(()=>st.classList.add('idle'),950);
+  const st=$('gstick');st.innerHTML=stickSVG(result)+HAP;st.classList.add('out');setTimeout(()=>st.classList.add('idle'),950);
   $('grays').style.opacity=1;
   setHead(d.grand?'隱藏籤':'第'+CN[+d.no]+'籤',d.grand?'好像有什麼不得了的東西掉出來了！':'籤掉出來了！');
   $('gnote').innerHTML='';$('gtap').style.opacity=1;
@@ -758,6 +758,7 @@ function openSlip(){
   $('gtap').style.opacity=0;requestAnimationFrame(()=>slip.classList.add('open'));setTimeout(()=>bar(result),900);
 }
 $('gbtn').addEventListener('click',start);
+$('gbtn').addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();start()}});
 $('gsnd').addEventListener('click',()=>{muted=!muted;const b=$('gsnd');b.textContent=muted?'音效 關':'音效 開';b.classList.toggle('off',muted);b.setAttribute('aria-pressed',String(!muted));if(!muted)SFX.tap()});
 box.addEventListener('click',()=>{if(state==='idle')start();else shakeHit()});
 box.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();box.click()}});
