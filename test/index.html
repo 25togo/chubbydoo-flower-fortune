@@ -785,12 +785,25 @@ function copyCode(){
 function bar(k){
   const d=FORTUNES[k];let h='';
   h+=`<button class="p" type="button" id="gshop">買花就富貴<small>用折扣碼買牡丹花束</small>${HAP}</button>`;
-  h+=`<button class="s" type="button" id="gshare">截圖分享好運${HAP}</button>`;
+  h+=`<button class="s" type="button" id="gshare">分享好運${HAP}</button>`;
   if(TEST)h+=`<button class="s" type="button" id="gagain">再抽一次${HAP}</button>`;
   const b=$('gbar');b.innerHTML=h;b.style.setProperty('--sbtn',d.v['--main']);b.classList.add('on');
-  $('gshare').onclick=()=>toast('截圖這張籤，分享到限動吧！明天還能再抽一支');
+  $('gshare').onclick=()=>shareFortune(k);prepShare(k);
   $('gshop').onclick=()=>{copyCode();setTimeout(()=>{location.href=SHOP},700)};
   if($('gagain'))$('gagain').onclick=()=>{location.reload()};
+}
+// ---------- 分享（籤圖＋文字＋連結；圖裡折扣碼已遮起來） ----------
+const LIVE='https://25togo.github.io/chubbydoo-flower-fortune/';
+let shareFile=null;
+// iPhone 要在手指點下去的當下就呼叫分享，所以籤一打開就先把圖抓好
+function prepShare(k){shareFile=null;try{fetch(LIVE+'share/'+k+'.jpg?v=1').then(r=>r.ok?r.blob():null).then(b=>{if(b)shareFile=new File([b],'chubbydoo-flower-'+k+'.jpg',{type:'image/jpeg'})}).catch(()=>{})}catch(e){}}
+function shareFortune(k){
+  const d=FORTUNES[k],url=LIVE+'?utm_source=share&utm_medium=social&utm_campaign=cny2027';
+  const text=`我抽到「${d.t}・${d.sub}」！來 chubby doo 搖一支 2027 好運花籤，每支籤都有牡丹花束折扣碼 👉 ${url}`;
+  const fallback=()=>{try{navigator.clipboard.writeText(text).then(()=>toast('已複製分享文字和連結，貼給朋友吧'),()=>toast('長按網址列複製連結分享給朋友'))}catch(e){toast('長按網址列複製連結分享給朋友')}};
+  if(!navigator.share)return fallback();
+  const data=shareFile&&navigator.canShare&&navigator.canShare({files:[shareFile]})?{files:[shareFile],text}:{title:'chubby doo 好運花籤',text,url};
+  navigator.share(data).catch(e=>{if(e&&e.name!=='AbortError')fallback()});
 }
 let tt;function toast(m){const t=$('gtoast');t.textContent=m;t.classList.add('on');clearTimeout(tt);tt=setTimeout(()=>t.classList.remove('on'),2600)}
 // ---------- 聲音＋震動 ----------
