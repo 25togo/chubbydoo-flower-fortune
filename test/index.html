@@ -78,6 +78,15 @@ html,body{height:100%;margin:0;overflow:hidden;background:var(--pagebg);transiti
 .g-btn.off{background:#B9A9A9;box-shadow:0 0 0 8px #E9E1D8,0 0 0 12px #B9A9A9;pointer-events:none}
 #gtoast{position:absolute;left:50%;top:40px;transform:translateX(-50%);z-index:40;background:rgba(58,32,48,.92);color:#fff;font:900 34px/1.4 'Noto Serif TC';padding:18px 40px;border-radius:40px;letter-spacing:.06em;opacity:0;transition:opacity .4s;white-space:nowrap}
 #gtoast.on{opacity:1}
+#gmodal{position:absolute;inset:0;z-index:60;background:rgba(58,32,48,.55);display:none;align-items:center;justify-content:center}
+#gmodal.on{display:flex}
+#gmodal .bx{position:relative;width:820px;padding:70px 60px 60px;background:var(--cream);border:6px solid var(--red);box-shadow:0 0 0 10px var(--cream),0 0 0 14px var(--red);text-align:center;color:var(--ink);animation:mpop .35s cubic-bezier(.3,1.4,.5,1)}
+@keyframes mpop{from{transform:scale(.7);opacity:0}to{transform:none;opacity:1}}
+#gmodal h3{margin:0 0 18px;font:900 64px/1.2 'Noto Serif TC';color:var(--red);letter-spacing:.1em}
+#gmodal p{margin:0;font:600 34px/1.7 'Noto Serif TC';letter-spacing:.06em}
+#gmodal .cd{margin:34px auto 10px;display:inline-flex;gap:14px;align-items:center;font:900 30px 'Noto Serif TC';color:var(--purple);letter-spacing:.1em}
+#gmodal .cd b{min-width:96px;padding:6px 10px;background:var(--red);color:var(--cream);border-radius:14px;font:400 60px/1.1 'Cormorant Garamond';letter-spacing:.04em}
+#gmodal button{position:relative;overflow:hidden;margin-top:40px;height:96px;padding:0 90px;border-radius:48px;border:0;background:var(--red);color:var(--cream);font:900 38px/96px 'Noto Serif TC';letter-spacing:.2em;cursor:pointer}
 @media (prefers-reduced-motion:reduce){#grays,#gstick.out.idle{animation:none}}
 /* ---- 籤紙（從設計稿 slip.html 帶入） ---- */
 
@@ -200,7 +209,8 @@ html,body{height:100%;margin:0;overflow:hidden;background:var(--pagebg);transiti
 </div>
 </div></div>
 <div class="ct" id="ct2"><div id="gbar"></div>
-<div id="gtoast"></div></div>
+<div id="gtoast"></div>
+<div id="gmodal" role="dialog" aria-modal="true"><div class="bx"><h3 id="gmt"></h3><p id="gmp"></p><div class="cd" id="gmcd"></div><br><button type="button" id="gmok">好<label class="hap"><input type="checkbox" switch tabindex="-1" aria-hidden="true"></label></button></div></div></div>
 <div id="gsnd" role="button" tabindex="0" aria-pressed="true"><span id="gsndt">音效 開</span><label class="hap"><input type="checkbox" switch tabindex="-1" aria-hidden="true"></label></div>
 <div class="g-noise"></div>
 </div></div>
@@ -786,11 +796,11 @@ function bar(k){
   const d=FORTUNES[k];let h='';
   h+=`<button class="p" type="button" id="gshop">買花就富貴<small>用折扣碼買牡丹花束</small>${HAP}</button>`;
   h+=`<button class="s" type="button" id="gshare">分享好運${HAP}</button>`;
-  if(TEST)h+=`<button class="s" type="button" id="gagain">再抽一次${HAP}</button>`;
+  h+=`<button class="s" type="button" id="gagain">每日一抽${HAP}</button>`;
   const b=$('gbar');b.innerHTML=h;b.style.setProperty('--sbtn',d.v['--main']);b.classList.add('on');
   $('gshare').onclick=()=>shareFortune(k);prepShare(k);
   $('gshop').onclick=()=>{copyCode();setTimeout(()=>{location.href=SHOP},700)};
-  if($('gagain'))$('gagain').onclick=()=>{location.reload()};
+  $('gagain').onclick=()=>{if(TEST)location.reload();else dailyCard()};
 }
 // ---------- 分享（籤圖＋文字＋連結；圖裡折扣碼已遮起來） ----------
 const LIVE='https://25togo.github.io/chubbydoo-flower-fortune/';
@@ -805,6 +815,19 @@ function shareFortune(k){
   const data=shareFile&&navigator.canShare&&navigator.canShare({files:[shareFile]})?{files:[shareFile],text}:{title:'chubby doo 好運花籤',text,url};
   navigator.share(data).catch(e=>{if(e&&e.name!=='AbortError')fallback()});
 }
+// ---------- 每日一抽（正式版：今天抽過了 → 提醒明天再來＋倒數） ----------
+let cdT=null;
+function dailyCard(){
+  const m=$('gmodal'),last=today>='2027-01-03';
+  $('gmt').textContent=last?'謝謝你來抽籤':'今天的好運抽走囉';
+  $('gmp').innerHTML=last?'今天是活動最後一天<br>祝你 2027 天天都是上上籤！':'每天都能抽一支新的花籤<br>明天再來，看看好運換成哪朵花';
+  const cd=$('gmcd');clearInterval(cdT);cd.style.display=last?'none':'';
+  if(!last){const tick=()=>{const t=new Date(),tp=new Date(t.toLocaleString('en-US',{timeZone:'Asia/Taipei'}));const left=Math.max(0,86400-(tp.getHours()*3600+tp.getMinutes()*60+tp.getSeconds()));
+      const f=n=>String(n).padStart(2,'0');cd.innerHTML=`下一支籤 <b>${f(Math.floor(left/3600))}</b>:<b>${f(Math.floor(left%3600/60))}</b>:<b>${f(left%60)}</b>`};tick();cdT=setInterval(tick,1000)}
+  m.classList.add('on');SFX.tap();
+}
+stage.appendChild($('gmodal'));  // 遮罩蓋滿整個螢幕（不只 1080x1920 那塊）
+$('gmok').onclick=()=>{$('gmodal').classList.remove('on');clearInterval(cdT)};
 let tt;function toast(m){const t=$('gtoast');t.textContent=m;t.classList.add('on');clearTimeout(tt);tt=setTimeout(()=>t.classList.remove('on'),2600)}
 // ---------- 聲音＋震動 ----------
 // ---------- 音效（全部用 WebAudio 即時合成，不用音檔） ----------
