@@ -702,7 +702,7 @@ function shopURL(k){const u=new URL('https://www.beafoo.com/products/peony-bouqu
   if(SRC.c)u.searchParams.set('utm_content',SRC.c);u.searchParams.set('utm_term',k);if(SRC.f)u.searchParams.set('fbclid',SRC.f);return u.toString()}
 function track(n,p){try{if(window.gtag)gtag('event',n,p||{})}catch(e){}}
 // 折扣碼打亂存放（原始碼裡看不到明碼）：花王 7 折 g、牡丹 85 折 p、其他 95 折 n
-const CPX={n:'UVpMLCU3Myo=',p:'NSkkOCE0Kio=',g:'NlxDJ1RLLjw='};
+const CPX={n:'KF1NUSBOMyc=',p:'My8/IDIxITY=',g:'Nz5NUVQ7KSM='};
 function cpCode(k){const b=atob(CPX[couponOf(k).tier]),x='chubbydoo';let o='';for(let i=0;i<b.length;i++)o+=String.fromCharCode(b.charCodeAt(i)^x.charCodeAt(i%x.length));return o}
 let COUPON='';
 const HAP='<label class="hap"><input type="checkbox" switch tabindex="-1" aria-hidden="true"></label>';
