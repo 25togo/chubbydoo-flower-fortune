@@ -681,7 +681,7 @@ const ART = (() => {
   // 優惠：花王 7 折、牡丹 85 折、其他 95 折（都只限牡丹花束、每位會員一次）
   window.couponOf = (k) => k === 'grand' ? { tier: 'g', off: '7', t: '花王專屬 · 牡丹花束專用 · 每人一次' }
     : k === 'peony' ? { tier: 'p', off: '85', t: '牡丹籤專屬 · 牡丹花束專用 · 每人一次' }
-    : { tier: 'n', off: '95', t: '抽籤紅包 · 牡丹花束專用 · 每人一次' };
+    : { tier: 'n', off: '95', t: '抽籤紅包 · 牡丹花束專用' };
   // 籤枝頭的小花顏色
   window.STICK_COLORS = { sun: ['#FFF3B0', '#F2A81E'], rose: ['#FFC7D2', '#C81E3A'], tulip: ['#FFE6B0', '#E2572E'], hydra: ['#E3EEFF', '#5D8FD6'], cactus: ['#FFE3EE', '#E8507A'], dande: ['#FFFFFF', '#D8D2B8'], lav: ['#F6E3FF', '#9C78D6'], babys: ['#FFFFFF', '#E6DCF5'], peach: ['#FFF0F4', '#F07AA0'], lotus: ['#FFF0F6', '#D24F86'], plum: ['#FFFFFF', '#D7353A'], narc: ['#FFFFFF', '#F2B233'], peony: ['#F3DDF7', '#8E5BB5'], grand: ['#FFE3D6', '#E8456A'], glad: ['#FFE6DA', '#F0603E'], orchid: ['#FFF0F6', '#D2558E'], lily: ['#FFFFFF', '#E2668A'], willow: ['#FFFFFF', '#C9C2B8'], daisy: ['#FFFFFF', '#F2B233'] };
 })();
@@ -815,7 +815,7 @@ function bar(k){
 const LIVE='https://25togo.github.io/chubbydoo-flower-fortune/';
 let shareFile=null;
 // iPhone 要在手指點下去的當下就呼叫分享，所以籤一打開就先把圖抓好
-function prepShare(k){shareFile=null;try{fetch(LIVE+'share/'+k+'.jpg?v=1').then(r=>r.ok?r.blob():null).then(b=>{if(b)shareFile=new File([b],'chubbydoo-flower-'+k+'.jpg',{type:'image/jpeg'})}).catch(()=>{})}catch(e){}}
+function prepShare(k){shareFile=null;try{fetch(LIVE+'share/'+k+'.jpg?v=2').then(r=>r.ok?r.blob():null).then(b=>{if(b)shareFile=new File([b],'chubbydoo-flower-'+k+'.jpg',{type:'image/jpeg'})}).catch(()=>{})}catch(e){}}
 function shareFortune(k){
   const d=FORTUNES[k],url=LIVE+'?utm_source=friend_share&utm_medium=social&utm_campaign='+CAMP;track('fortune_share',{fortune:k});
   const text=`我抽到「${d.t}・${d.sub}」！來 chubby doo 搖一支 2027 好運花籤，每支籤都有牡丹花束折扣碼 👉 ${url}`;
