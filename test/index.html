@@ -948,7 +948,7 @@ $('gstick').addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.pr
 // 今天抽過了 → 直接顯示今天的籤
 const now=Date.now();
 if(TEST){
-  const tb=document.createElement('div');tb.id='gtest';tb.textContent='測試版 · 可無限重抽';$('stage').appendChild(tb);
+  // 測試版不顯示「測試版」標籤（拍廣告素材用）
 }else if(now<EV_START||now>=EV_END){
   const before=now<EV_START;state='closed';
   setHead(before?'即將開抽':'活動結束',before?'12/1-12/31 每天抽好運':'謝謝大家來抽籤，明年見！');
