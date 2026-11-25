@@ -730,6 +730,8 @@ const TEST=MODE==='test';
 const EV_START=Date.parse('2026-12-01T00:00:00+08:00'),EV_END=Date.parse('2027-01-01T00:00:00+08:00');
 const today=new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Taipei'}).format(new Date());
 const SKEY='chubbydoo_flower_fortune_2027';
+// 被嵌在 Shopline 分頁（iframe）裡時，跳官網要換掉整頁，不要在框裡開
+function goTop(u){try{if(window.top!==window.self){window.top.location.href=u;return}}catch(e){}location.href=u}
 function load(){try{return JSON.parse(localStorage.getItem(SKEY)||'null')}catch(e){return null}}
 function save(k){try{localStorage.setItem(SKEY,JSON.stringify({d:today,k}))}catch(e){}}
 function pick(){
@@ -808,7 +810,7 @@ function bar(k){
   h+=`<button class="s" type="button" id="gagain">每日一抽${HAP}</button>`;
   const b=$('gbar');b.innerHTML=h;b.style.setProperty('--sbtn',d.v['--main']);b.classList.add('on');
   $('gshare').onclick=()=>shareFortune(k);prepShare(k);
-  $('gshop').onclick=()=>{copyCode();setTimeout(()=>{location.href=shopURL(k)},700);track('fortune_shop_click',{fortune:k})};
+  $('gshop').onclick=()=>{copyCode();setTimeout(()=>{goTop(shopURL(k))},700);track('fortune_shop_click',{fortune:k})};
   $('gagain').onclick=()=>{if(TEST)location.reload();else dailyCard()};
 }
 // ---------- 分享（籤圖＋文字＋連結；圖裡折扣碼已遮起來） ----------
@@ -954,7 +956,7 @@ if(TEST){
   setHead(before?'即將開抽':'活動結束',before?'12/1-12/31 每天抽好運':'謝謝大家來抽籤，明年見！');
   const btn=$('gbtn');btn.firstChild.textContent=before?'12/1 開始抽籤':'逛逛 chubby doo';btn.classList.add('off');
   $('gnote').innerHTML=before?'每支籤都有<b>牡丹花束折扣碼</b>喔！<b>買花就富貴</b>':'';
-  if(!before){btn.classList.remove('off');btn.onclick=()=>{location.href='https://www.beafoo.com/pages/chubbydoo'}}
+  if(!before){btn.classList.remove('off');btn.onclick=()=>{goTop('https://www.beafoo.com/pages/chubbydoo')}}
 }
 const prev=load();
 if(!TEST&&state!=='closed'&&prev&&prev.d===today&&FORTUNES[prev.k]){
