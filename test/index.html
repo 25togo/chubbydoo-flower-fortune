@@ -737,9 +737,9 @@ function save(k){try{localStorage.setItem(SKEY,JSON.stringify({d:today,k}))}catc
 function pick(){
   if(TEST&&FORTUNES[hash])return hash;   // 測試版：#grand、#peony、#lily… 指定抽到哪支
   const r=Math.random();
-  if(r<.02)return 'grand';   // 牡丹花王 2%（7 折）
-  if(r<.07)return 'peony';   // 牡丹 5%（85 折）
-  // 其他 16 種花平分 93%（95 折）
+  if(r<.01)return 'grand';   // 牡丹花王 1%（7 折）
+  if(r<.04)return 'peony';   // 牡丹 3%（85 折）
+  // 其他 17 種花平分 96%（95 折）
   return KEYS[Math.floor(Math.random()*KEYS.length)];
 }
 // ---------- 籤筒（六角日式籤筒） ----------
