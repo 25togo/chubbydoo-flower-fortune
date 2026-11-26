@@ -1,4 +1,4 @@
-<!doctype html><html lang="zh-Hant"><head><meta charset="utf-8"><meta name="robots" content="noindex"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600&family=Noto+Serif+TC:wght@600;900&display=swap"></head><body>
+<!doctype html><html lang="zh-Hant"><head><meta charset="utf-8"><meta name="robots" content="noindex"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="description" content="搖一搖，抽你的 2027 開運花！每支籤都有牡丹花束折扣碼，每天都能抽一次。"><meta property="og:type" content="website"><meta property="og:url" content="https://25togo.github.io/chubbydoo-flower-fortune/"><meta property="og:title" content="搖一支 2027 好運花籤｜chubby doo"><meta property="og:description" content="搖一搖，抽你的 2027 開運花！每支籤都有牡丹花束折扣碼，每天都能抽一次。"><meta property="og:image" content="https://25togo.github.io/chubbydoo-flower-fortune/og.jpg?v=1"><meta property="og:image:width" content="1200"><meta property="og:image:height" content="630"><meta name="twitter:card" content="summary_large_image"><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600&family=Noto+Serif+TC:wght@600;900&display=swap"></head><body>
 <title>chubby doo 開運花籤</title>
 <style>
 /* 單一復古印刷風：舞台固定 1080x1920，等比縮放到手機螢幕 */
@@ -159,6 +159,7 @@ html,body{height:100%;margin:0;overflow:hidden;background:var(--pagebg);transiti
 .coupon .r .code em{font:400 40px/56px 'Cormorant Garamond';font-style:normal;letter-spacing:.1em;background:var(--cream);border:3px solid var(--main);padding:0 16px;border-radius:10px;white-space:nowrap}
 .coupon .r .code u{text-decoration:none;font:900 24px/56px 'Noto Serif TC';background:var(--main);color:var(--cream);padding:0 18px;border-radius:28px;letter-spacing:.1em;white-space:nowrap}
 .grand .coupon .l b{font-size:92px}
+.coupon .qr{position:absolute;right:10px;top:5px;width:110px;height:110px;background:#fff;border-radius:10px;padding:6px;box-sizing:border-box}.coupon .qr img{width:100%;height:100%;display:block;image-rendering:pixelated}
 
 
 </style>
@@ -694,7 +695,8 @@ const LOGO='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAA4QAAAFGCAYAAAAy8VGtAA
 // ---------- 追蹤標記：客人從哪個入口進來（ig 限動／貼文…），去官網時帶著同一個來源，系統才會算進 IG／FB ----------
 const CAMP='cny2027_flower_fortune';
 const SRC=(function(){const q=new URLSearchParams(location.search),k='chubbydoo_ff_src';let o=null;
-  if(q.get('utm_source'))o={s:q.get('utm_source'),m:q.get('utm_medium')||'referral',c:q.get('utm_content')||''};
+  if(q.has('qr'))o={s:'friend_share',m:'social',c:'qr'};  // 分享圖上的 QR code（網址越短 QR 越好掃）
+  else if(q.get('utm_source'))o={s:q.get('utm_source'),m:q.get('utm_medium')||'referral',c:q.get('utm_content')||''};
   try{if(o)localStorage.setItem(k,JSON.stringify(o));else o=JSON.parse(localStorage.getItem(k)||'null')}catch(e){}
   o=o||{s:'flower_fortune',m:'referral',c:''};o.f=q.get('fbclid')||'';return o})();
 function shopURL(k){const u=new URL('https://www.beafoo.com/products/peony-bouquet-soft-cookiesx5');
@@ -817,7 +819,7 @@ function bar(k){
 const LIVE='https://25togo.github.io/chubbydoo-flower-fortune/';
 let shareFile=null;
 // iPhone 要在手指點下去的當下就呼叫分享，所以籤一打開就先把圖抓好
-function prepShare(k){shareFile=null;try{fetch(LIVE+'share/'+k+'.jpg?v=2').then(r=>r.ok?r.blob():null).then(b=>{if(b)shareFile=new File([b],'chubbydoo-flower-'+k+'.jpg',{type:'image/jpeg'})}).catch(()=>{})}catch(e){}}
+function prepShare(k){shareFile=null;try{fetch(LIVE+'share/'+k+'.jpg?v=3').then(r=>r.ok?r.blob():null).then(b=>{if(b)shareFile=new File([b],'chubbydoo-flower-'+k+'.jpg',{type:'image/jpeg'})}).catch(()=>{})}catch(e){}}
 function shareFortune(k){
   const d=FORTUNES[k],url=LIVE+'?utm_source=friend_share&utm_medium=social&utm_campaign='+CAMP;track('fortune_share',{fortune:k});
   const text=`我抽到「${d.t}・${d.sub}」！來 chubby doo 搖一支 2027 好運花籤，每支籤都有牡丹花束折扣碼 👉 ${url}`;
