@@ -726,8 +726,8 @@ const pw='搖一搖抽花籤好運來'.split('');$('gpills').innerHTML=pw.map((c
 const hash=location.hash.slice(1);
 const MODE='live';           // live＝正式版（活動期間、每天一次）；test＝測試版（無限重抽、#grand 必中花王）
 const TEST=MODE==='test';
-// 活動期間（台北時間）：12/1（二）00:00 ～ 12/31（四）23:59
-const EV_START=Date.parse('2026-11-01T00:00:00+08:00'),EV_END=Date.parse('2027-01-01T00:00:00+08:00');
+// 不鎖開始時間（上線即可抽）；只鎖結束：12/24（四）23:59 台北時間
+const EV_END=Date.parse('2026-12-25T00:00:00+08:00');
 const today=new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Taipei'}).format(new Date());
 const SKEY='chubbydoo_flower_fortune_2027';
 // 被嵌在 Shopline 分頁（iframe）裡時，跳官網要換掉整頁，不要在框裡開
@@ -951,12 +951,12 @@ $('gstick').addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.pr
 const now=Date.now();
 if(TEST){
   // 測試版不顯示「測試版」標籤（拍廣告素材用）
-}else if(now<EV_START||now>=EV_END){
-  const before=now<EV_START;state='closed';
-  setHead(before?'即將開抽':'活動結束',before?'12/1-12/31 每天抽好運':'謝謝大家來抽籤，明年見！');
-  const btn=$('gbtn');btn.firstChild.textContent=before?'12/1 開始抽籤':'逛逛 chubby doo';btn.classList.add('off');
-  $('gnote').innerHTML=before?'每支籤都有<b>牡丹花束折扣碼</b>喔！<b>買花就富貴</b>':'';
-  if(!before){btn.classList.remove('off');btn.onclick=()=>{goTop('https://www.beafoo.com/pages/chubbydoo')}}
+}else if(now>=EV_END){
+  state='closed';
+  setHead('活動結束','謝謝大家來抽籤，明年見！');
+  const btn=$('gbtn');btn.firstChild.textContent='逛逛 chubby doo';
+  $('gnote').innerHTML='';
+  btn.onclick=()=>{goTop('https://www.beafoo.com/pages/chubbydoo')};
 }
 const prev=load();
 if(!TEST&&state!=='closed'&&prev&&prev.d===today&&FORTUNES[prev.k]){
