@@ -5,7 +5,7 @@
 :root{color-scheme:light;--pagebg:#F6D3DC;--red:#D7353A;--dred:#C22C31;--cream:#F9F4EA;--purple:#8A4AA2;--mint:#9FDCC4;--yellow:#F8D547;--ink:#4a2420}
 html,body{height:100%;margin:0;overflow:hidden;background:var(--pagebg);transition:background .6s}
 #wrap{position:fixed;inset:0;overflow:hidden;background:var(--pagebg);transition:background .6s}
-#stage{position:absolute;left:0;top:0;width:1080px;height:1920px;transform-origin:0 0;--ox:0px;--oy:0px;overflow:hidden;font-family:'Noto Serif TC',serif;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none}
+#stage{visibility:hidden;position:absolute;left:0;top:0;width:1080px;height:1920px;transform-origin:0 0;--ox:0px;--oy:0px;overflow:hidden;font-family:'Noto Serif TC',serif;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none}
 #stage *{box-sizing:border-box}
 .g-blob{position:absolute;opacity:.55}
 .g-noise{position:absolute;inset:0;opacity:.5;pointer-events:none;z-index:50;background:var(--grainbg);background-size:240px 240px}
@@ -718,7 +718,7 @@ ART.setLite(true);
 // ---------- 縮放 ----------
 function fit(){const s=Math.min(innerWidth/1080,innerHeight/1920),W=innerWidth/s,H=innerHeight/s;
   Object.assign(stage.style,{width:W+'px',height:H+'px',transform:`scale(${s})`});
-  stage.style.setProperty('--ox',(W-1080)/2+'px');stage.style.setProperty('--oy',(H-1920)/2+'px')}
+  stage.style.setProperty('--ox',(W-1080)/2+'px');stage.style.setProperty('--oy',(H-1920)/2+'px');stage.style.visibility='visible'}
 addEventListener('resize',fit);fit();
 // ---------- 夾條 ----------
 const pw='搖一搖抽花籤好運來'.split('');$('gpills').innerHTML=pw.map((c,i)=>`<span class="pl">${c}</span>`+(i<pw.length-1?'<span class="fu">福</span>':'')).join('');
