@@ -824,7 +824,9 @@ function shareFortune(k){
   const d=FORTUNES[k],url=LIVE+'?utm_source=friend_share&utm_medium=social&utm_campaign='+CAMP;track('fortune_share',{fortune:k});
   const text=`我抽到「${d.t}・${d.sub}」！來 chubby doo 搖一支 2027 好運花籤，每支籤都有牡丹花束折扣碼 👉 ${url}`;
   const fallback=()=>{try{navigator.clipboard.writeText(text).then(()=>toast('已複製分享文字和連結，貼給朋友吧'),()=>toast('長按網址列複製連結分享給朋友'))}catch(e){toast('長按網址列複製連結分享給朋友')}};
-  if(!navigator.share)return fallback();
+  // 電腦版（滑鼠操作）直接複製文字＋連結：Mac 分享選單「拷貝」會把同一張圖貼成兩張、連結也不見
+  const desktop=matchMedia('(hover:hover) and (pointer:fine)').matches;
+  if(!navigator.share||desktop)return fallback();
   const data=shareFile&&navigator.canShare&&navigator.canShare({files:[shareFile]})?{files:[shareFile],text}:{title:'chubby doo 好運花籤',text,url};
   navigator.share(data).catch(e=>{if(e&&e.name!=='AbortError')fallback()});
 }
